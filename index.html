@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misi Tarannum Murattal: Surah al-Fatihah</title>
+  
+  <!-- Font Google untuk Arab dan Tulisan Malay -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Fredoka:wght@400;600;700&family=Noto+Naskh+Arabic:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Fredoka', cursive, sans-serif;
+      background-color: #0b1d19;
+      color: #ffffff;
+    }
+
+    /* Container Utama */
+    #stage-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: radial-gradient(circle, #153e35 0%, #081512 100%);
+    }
+
+    #video-feed {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      z-index: 1;
+    }
+
+    /* Gradient overlay untuk kontras teks */
+    .shade-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(5, 20, 16, 0.75) 0%,
+        rgba(5, 20, 16, 0.15) 35%,
+        rgba(5, 20, 16, 0.15) 65%,
+        rgba(5, 20, 16, 0.85) 100%
+      );
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Header Tajuk Utama */
+    #header-bar {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(92%, 800px);
+      text-align: center;
+      z-index: 10;
+    }
+
+    /* Kad Tugasan Berada di Bahagian Atas / Dahi */
+    #foreheadCard {
+      position: absolute;
+      z-index: 10;
+      top: 16%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      width: min(92%, 680px);
+      padding: 20px 24px;
+      border: 4px solid #facc15;
+      border-radius: 28px;
+      background: rgba(255, 253, 245, 0.96);
+      color: #064e3b;
+      text-align: center;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), inset 0 0 15px rgba(250, 204, 21, 0.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    #foreheadCard.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) scale(1);
+    }
+
+    .badge-label {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      color: #854d0e;
+      background-color: #fef08a;
+      padding: 4px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      border: 1px solid #fde047;
+    }
+
+    #verse {
+      font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+      font-size: clamp(26px, 4.5vw, 42px);
+      line-height: 1.9;
+      direction: rtl;
+      color: #064e3b;
+      margin: 4px 0 12px;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.05);
+    }
+
+    #tarannum {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+      color: #fef3c7;
+      padding: 8px 24px;
+      border-radius: 9999px;
+      font-size: clamp(16px, 2.2vw, 22px);
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
+      border: 2px solid #a7f3d0;
+    }
+
+    /* Panel Bawah untuk Butang Kawalan */
+    #bottomPanel {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(92%, 650px);
+      text-align: center;
+      z-index: 10;
+    }
+
+    #message {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: #fef08a;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    }
+
+    .btn-action {
+      border: none;
+      border-radius: 9999px;
+      padding: 14px 28px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-action:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+      color: #14532d;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background: rgba(255, 255, 255, 0.9);
+      color: #991b1b;
+    }
+
+    /* Skrin Mula & Arahan */
+    #startScreen {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at center, #153e35 0%, #081512 100%);
+    }
+
+    .intro-card {
+      width: min(100%, 540px);
+      padding: 36px 28px;
+      text-align: center;
+      border: 2px solid #facc15;
+      border-radius: 32px;
+      background: rgba(15, 35, 29, 0.85);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    /* Avatar Maya / Visual Fallback jika Kamera Tiada */
+    #avatar-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      background: linear-gradient(180deg, #102d27 0%, #081512 100%);
+    }
+
+    .avatar-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: #154d3f;
+      border: 4px solid #facc15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    @media (max-height: 650px) {
+      #foreheadCard { top: 12%; padding: 12px 18px; }
+      #verse { font-size: clamp(20px, 3.8vh, 32px); margin: 2px 0 6px; }
+      #tarannum { padding: 4px 16px; font-size: 16px; }
+      #bottomPanel { bottom: 12px; }
+      .btn-action { padding: 10px 20px; font-size: 14px; }
+    }
+  </style>
+</head>
+
+<body>
+<div id="stage-container">
+
+  <!-- Kamera Feed Skrin Penuh -->
+  <video id="video-feed" autoplay muted playsinline></video>
+
+  <!-- Fallback Visual sekiranya Kamera Dihalang / Tiada -->
+  <div id="avatar-fallback" style="display: none;">
+    <div class="avatar-circle">📖</div>
+    <p class="text-yellow-300 font-bold text-lg">Mod Latihan Tanpa Kamera</p>
+    <p class="text-emerald-200 text-sm max-w-xs mt-1">Anda masih boleh membaca ayat dan mempraktikkan tarannum!</p>
+  </div>
+
+  <!-- Shade Layer -->
+  <div class="shade-overlay"></div>
+
+  <!-- Header Tajuk Game -->
+  <header id="header-bar">
+    <div class="inline-block bg-emerald-900/80 backdrop-blur-md px-6 py-2 rounded-full border border-emerald-500/30 shadow-lg">
+      <h1 class="text-xl sm:text-2xl font-bold text-yellow-400 tracking-wide">
+        ✨ MISI TARANNUM MURATTAL ✨
+      </h1>
+      <p class="text-xs sm:text-sm text-emerald-200 mt-0.5">
+        Surah al-Fatihah · Latihan Tarannum Nahawand & Hijjaz
+      </p>
+    </div>
+  </header>
+
+  <!-- Kad Tugasan di Bahagian Atas / Dahi -->
+  <section id="foreheadCard">
+    <div class="badge-label">🎯 TUGASAN BACAAN</div>
+    <p id="verse" lang="ar" dir="rtl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+    <div>
+      <div id="tarannum">
+        <span>🎵 Tarannum:</span>
+        <span id="tarannum-name" class="text-yellow-300">Nahawand</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel Kawalan Bawah -->
+  <div id="bottomPanel">
+    <div id="message">
+      Sedia untuk memulakan latihan tarannum? Tekan butang MULA!
+    </div>
+    <div class="flex justify-center items-center flex-wrap gap-3">
+      <button id="startBtn" class="btn-action btn-primary">
+        ▶️ MULA
+      </button>
+      <button id="nextBtn" class="btn-action btn-secondary" style="display: none;">
+        🎲 TUGASAN RAWAK
+      </button>
+      <button id="stopBtn" class="btn-action btn-danger" style="display: none;">
+        ⏹️ TAMATKAN
+      </button>
+    </div>
+  </div>
+
+  <!-- Skrin Mula & Kebenaran Kamera -->
+  <div id="startScreen">
+    <div class="intro-card">
+      <div class="text-5xl mb-3">🎙️</div>
+      <h2 class="text-2xl sm:text-3xl font-bold text-yellow-400 mb-2">
+        Misi Tarannum Murattal
+      </h2>
+      <p class="text-emerald-100 text-sm sm:text-base leading-relaxed mb-4">
+        Mari kenali 7 ayat <b>Surah al-Fatihah</b> dan perhebatkan bacaan anda dengan 2 jenis tarannum utama: 
+        <span class="text-yellow-300 font-bold">Nahawand</span> & <span class="text-yellow-300 font-bold">Hijjaz</span>!
+      </p>
+
+      <div class="bg-emerald-950/70 p-4 rounded-2xl border border-emerald-700/50 text-xs sm:text-sm text-emerald-200 mb-6 text-left space-y-2">
+        <p class="font-bold text-yellow-400">💡 Cara Bermain:</p>
+        <p>1. Benarkan akses kamera untuk paparan skrin penuh.</p>
+        <p>2. Ayat dan tarannum akan muncul di atas dahi skrin anda.</p>
+        <p>3. Baca ayat tersebut mengikut rentak tarannum bersama rakan/guru!</p>
+      </div>
+
+      <p id="cameraError" class="text-xs text-amber-300 mb-4 hidden"></p>
+
+      <button id="enterBtn" class="btn-action btn-primary w-full py-4 text-lg">
+        📷 BUKA KAMERA & MULA
+      </button>
+      
+      <button id="skipCamBtn" class="mt-3 text-xs text-emerald-300 underline hover:text-white transition">
+        Main tanpa kamera
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Data 7 Ayat Surah al-Fatihah Lengkap
+const verses = [
+  { id: 1, text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", name: "Ayat 1" },
+  { id: 2, text: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ", name: "Ayat 2" },
+  { id: 3, text: "الرَّحْمَٰنِ الرَّحِيمِ", name: "Ayat 3" },
+  { id: 4, text: "مَـٰلِكِ يَوْمِ الدِّينِ", name: "Ayat 4" },
+  { id: 5, text: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ", name: "Ayat 5" },
+  { id: 6, text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ", name: "Ayat 6" },
+  { id: 7, text: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ", name: "Ayat 7" }
+];
+
+// Senarai Tarannum yang ditetapkan
+const tarannumList = ["Nahawand", "Hijjaz"];
+
+// Elemen DOM
+const videoFeed = document.getElementById("video-feed");
+const avatarFallback = document.getElementById("avatar-fallback");
+const startScreen = document.getElementById("startScreen");
+const enterBtn = document.getElementById("enterBtn");
+const skipCamBtn = document.getElementById("skipCamBtn");
+const cameraError = document.getElementById("cameraError");
+const foreheadCard = document.getElementById("foreheadCard");
+const verseText = document.getElementById("verse");
+const tarannumName = document.getElementById("tarannum-name");
+const message = document.getElementById("message");
+const startBtn = document.getElementById("startBtn");
+const nextBtn = document.getElementById("nextBtn");
+const stopBtn = document.getElementById("stopBtn");
+
+let mediaStream = null;
+let lastVerseIndex = -1;
+let lastTarannumIndex = -1;
+let isPlaying = false;
+
+// Fungsi Membuka Kamera
+async function initCamera() {
+  cameraError.classList.add("hidden");
+  enterBtn.disabled = true;
+  enterBtn.innerHTML = "⌛ MEMBUKA KAMERA...";
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showCameraError("Akses kamera tidak disokong oleh pelayar web ini. Mod maya diaktifkan.");
+    useFallbackMode();
+    return;
+  }
+
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    });
+
+    videoFeed.srcObject = mediaStream;
+    await videoFeed.play();
+    
+    // Berjaya buka kamera
+    avatarFallback.style.display = "none";
+    videoFeed.style.display = "block";
+    startScreen.style.display = "none";
+    
+  } catch (err) {
+    console.warn("Kamera tidak dapat diakses:", err);
+    showCameraError("Kamera dihalang atau tidak dijumpai. Aplikasi beralih ke mod maya.");
+    useFallbackMode();
+  } finally {
+    enterBtn.disabled = false;
+    enterBtn.innerHTML = "📷 BUKA KAMERA & MULA";
+  }
+}
+
+// Mod Tanpa Kamera (Fallback)
+function useFallbackMode() {
+  avatarFallback.style.display = "flex";
+  videoFeed.style.display = "none";
+  startScreen.style.display = "none";
+}
+
+function showCameraError(msg) {
+  cameraError.textContent = msg;
+  cameraError.classList.remove("hidden");
+}
+
+// Menjana Tugasan Rawak (Ayat & Tarannum)
+function generateRandomTask() {
+  let verseIdx;
+  do {
+    verseIdx = Math.floor(Math.random() * verses.length);
+  } while (verseIdx === lastVerseIndex && verses.length > 1);
+
+  let tarannumIdx = Math.floor(Math.random() * tarannumList.length);
+
+  lastVerseIndex = verseIdx;
+  lastTarannumIndex = tarannumIdx;
+
+  const currentVerse = verses[verseIdx];
+  const currentTarannum = tarannumList[tarannumIdx];
+
+  // Animasi penukaran kad
+  foreheadCard.classList.remove("active");
+  
+  setTimeout(() => {
+    verseText.textContent = currentVerse.text;
+    tarannumName.textContent = currentTarannum;
+    foreheadCard.classList.add("active");
+  }, 150);
+
+  message.textContent = `Sila baca ${currentVerse.name} dengan irama Tarannum ${currentTarannum}!`;
+}
+
+// Kawalan Permainan
+function startGame() {
+  isPlaying = true;
+  startBtn.style.display = "none";
+  nextBtn.style.display = "inline-flex";
+  stopBtn.style.display = "inline-flex";
+  generateRandomTask();
+}
+
+function nextTask() {
+  if (!isPlaying) return;
+  generateRandomTask();
+}
+
+function stopGame() {
+  isPlaying = false;
+  foreheadCard.classList.remove("active");
+  nextBtn.style.display = "none";
+  stopBtn.style.display = "none";
+  startBtn.style.display = "inline-flex";
+  message.textContent = "Aktiviti tamat. Tekan MULA untuk mencuba tugasan baru.";
+}
+
+// Event Listeners
+enterBtn.addEventListener("click", initCamera);
+skipCamBtn.addEventListener("click", useFallbackMode);
+
+startBtn.addEventListener("click", startGame);
+nextBtn.addEventListener("click", nextTask);
+stopBtn.addEventListener("click", stopGame);
+
+// Kemaskan stream kamera semasa menukar/menutup tab
+window.addEventListener("beforeunload", () => {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+  }
+});
+</script>
+</body>
+</html>
